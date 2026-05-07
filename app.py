@@ -80,7 +80,7 @@ def index():
 
 if __name__ == "__main__":
     from pyngrok import ngrok
-    ngrok.set_auth_token("3DLJNbZI5bZhxqZv3P9J5X1aDXu_2XbQRSzLDKFruUeyJjSz")
+    ngrok.set_auth_token("key")
     public_url = ngrok.connect(6006)
     print("=" * 50)
     print(f"公网访问地址：{public_url}")
