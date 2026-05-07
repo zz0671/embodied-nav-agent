@@ -1,4 +1,3 @@
-# embodied-nav-agent
 # 具身导航 Agent
 
 基于 Habitat-sim 仿真环境的具身导航 Agent，支持文字输入，控制机器人导航到指定地点。
