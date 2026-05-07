@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>具身导航Agent</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+  h1 { text-align: center; color: #00d4ff; }
+  .input-area { display: flex; gap: 10px; margin: 20px 0; }
+  input { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 16px; background: #16213e; color: #eee; }
+  button { padding: 12px 24px; border-radius: 8px; border: none; background: #00d4ff; color: #000; font-size: 16px; cursor: pointer; font-weight: bold; }
+  button:disabled { background: #444; color: #888; cursor: not-allowed; }
+  #status { padding: 12px; background: #16213e; border-radius: 8px; margin: 10px 0; min-height: 40px; }
+  #frames-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+  #frames-container img { width: 100%; border-radius: 8px; }
+  #latest-frame { width: 100%; border-radius: 8px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<h1>🤖 具身导航Agent</h1>
+<p style="text-align:center;color:#aaa">支持目标：沙发、床、椅子</p>
+
+<div class="input-area">
+  <input id="user-input" type="text" placeholder="输入导航指令，例如：请到沙发旁边" />
+  <button id="send-btn" onclick="sendCommand()">发送</button>
+  <button onclick="resetAgent()" style="background:#ff6b6b">重置</button>
+</div>
+
+<div id="status">等待指令...</div>
+
+<img id="latest-frame" src="" style="display:none" />
+
+<div id="frames-container"></div>
+
+<script>
+function sendCommand() {
+  const input = document.getElementById('user-input').value.trim();
+  if (!input) return;
+  
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('status').innerText = '导航中，请稍候...';
+  document.getElementById('frames-container').innerHTML = '';
+  document.getElementById('latest-frame').style.display = 'none';
+
+  fetch('/navigate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({input: input})
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('status').innerText = data.message;
+    
+    data.frames.forEach((b64, idx) => {
+      const img = document.createElement('img');
+      img.src = 'data:image/jpeg;base64,' + b64;
+      document.getElementById('frames-container').appendChild(img);
+      
+      if (idx === data.frames.length - 1) {
+        document.getElementById('latest-frame').src = img.src;
+        document.getElementById('latest-frame').style.display = 'block';
+      }
+    });
+    
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('user-input').value = '';
+  })
+  .catch(err => {
+    document.getElementById('status').innerText = '请求失败: ' + err;
+    document.getElementById('send-btn').disabled = false;
+  });
+}
+
+function resetAgent() {
+  fetch('/reset', {method: 'POST'})
+  .then(r => r.json())
+  .then(() => {
+    document.getElementById('status').innerText = '已重置';
+    document.getElementById('frames-container').innerHTML = '';
+    document.getElementById('latest-frame').style.display = 'none';
+  });
+}
+
+document.getElementById('user-input').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') sendCommand();
+});
+</script>
+</body>
+</html>
